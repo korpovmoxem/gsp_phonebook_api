@@ -78,6 +78,7 @@ class DataBase:
         Base.metadata.create_all(bind=engine)
         self.__Session = sessionmaker(bind=engine, autoflush=True)
         if not self.__Session().query(OrganizationModel).all():
+            self.organization_tree = list()
             self.__fill_database()
 
 
@@ -141,6 +142,18 @@ class DataBase:
         session.add_all(employee_rows)
         session.commit()
 
+        self.departments = department_rows
+        for organization in organization_rows:
+            parent = {
+                    'ID': organization.ID,
+                    'Name': organization.Name,
+                    'Children': list()
+                    }
+            children = list(filter(lambda department: department.OrganizationID == organization.ID and department.ParentID == '0000000-0000-0000-0000-000000000000', department_rows))
+            for child in children:
+                parent['Children'].append(self.create_organization_tree(child))
+            self.organization_tree.append(parent)
+
     @staticmethod
     def add_department_parent(parent_department: DepartmentModel, departments: list, level=0):
         level += 1
@@ -156,6 +169,18 @@ class DataBase:
     def get_session(self):
         with self.__Session() as session:
             yield session
+
+    def create_organization_tree(self, parent):
+        tree = {
+            'ID': parent.ID,
+            'Name': parent.Name,
+            'Children': list()
+        }
+        children = list(filter(lambda department: department.ParentID == parent.ID, self.departments))
+        for child in children:
+            tree['Children'].append(self.create_organization_tree(child))
+        return tree
+
 
 
 

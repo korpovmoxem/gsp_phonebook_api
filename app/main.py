@@ -72,12 +72,18 @@ def search(
     * **email** - почта
     * **name** - поиск по ФИО
     """
-    return
+    match attribute:
+        case 'phone':
+            return sqlalchemy_paginate(db.query(EmployeeModel).where(EmployeeModel.Phone.contains(value)))
+        case 'email':
+            return sqlalchemy_paginate(db.query(EmployeeModel).where(EmployeeModel.Email.contains(value)))
+        case 'name':
+            return sqlalchemy_paginate(db.query(EmployeeModel).where(EmployeeModel.FullNameRus.contains(value)))
 
 
 @app.get('/get_organization_tree')
 def get_organization_tree() -> list:
-    return database.get_organization_tree()
+    return database.organization_tree
 
 
 if __name__ == '__main__':
