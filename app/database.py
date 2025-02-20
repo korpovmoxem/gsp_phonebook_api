@@ -1,6 +1,7 @@
 import random
 import os
 import base64
+import json
 
 from sqlalchemy import Text, Column, create_engine, INTEGER
 from sqlalchemy.ext.declarative import declarative_base
@@ -78,8 +79,11 @@ class DataBase:
         Base.metadata.create_all(bind=engine)
         self.__Session = sessionmaker(bind=engine, autoflush=True)
         if not self.__Session().query(OrganizationModel).all():
-            self.organization_tree = list()
             self.__fill_database()
+
+        with open('organization_tree.json', 'r') as file:
+            self.organization_tree =  json.load(file)
+
 
 
     def __fill_database(self):
@@ -143,6 +147,7 @@ class DataBase:
         session.commit()
 
         self.departments = department_rows
+        organization_tree = list()
         for organization in organization_rows:
             parent = {
                     'ID': organization.ID,
@@ -152,7 +157,12 @@ class DataBase:
             children = list(filter(lambda department: department.OrganizationID == organization.ID and department.ParentID == '0000000-0000-0000-0000-000000000000', department_rows))
             for child in children:
                 parent['Children'].append(self.create_organization_tree(child))
-            self.organization_tree.append(parent)
+                organization_tree.append(parent)
+
+        with open('organization_tree.json', 'w') as file:
+            json.dump(organization_tree, file)
+
+
 
     @staticmethod
     def add_department_parent(parent_department: DepartmentModel, departments: list, level=0):

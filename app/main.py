@@ -83,6 +83,9 @@ def search(
 
 @app.get('/get_organization_tree')
 def get_organization_tree() -> list:
+    """
+    <h2>Получить структуру организаций в древовидной структуре</h2>\n
+    """
     return database.organization_tree
 
 
